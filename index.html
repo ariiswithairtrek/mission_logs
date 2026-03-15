@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>FlightLog — Field Data Logger</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #f4f5f7;
+      --surface:   #ffffff;
+      --surface2:  #eef0f3;
+      --border:    #d8dce3;
+      --accent:    #3a6fd8;
+      --accent2:   #c0622a;
+      --green:     #2e7d52;
+      --red:       #b94040;
+      --text:      #1f2430;
+      --muted:     #7a8494;
+      --font-mono: 'Share Tech Mono', monospace;
+      --font-body: 'Barlow', sans-serif;
+      --font-cond: 'Barlow Condensed', sans-serif;
+      color-scheme: light;
+    }
+
+    [data-theme="dark"] {
+      --bg:        #111418;
+      --surface:   #1c2028;
+      --surface2:  #242a35;
+      --border:    #333d4d;
+      --accent:    #6b9cf0;
+      --accent2:   #e07a45;
+      --green:     #4caf80;
+      --red:       #d96060;
+      --text:      #dde2ec;
+      --muted:     #5e6e88;
+      color-scheme: dark;
+    }
+
+    /* ── Theme toggle ── */
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 5px 9px;
+      line-height: 1;
+      transition: border-color .2s, color .2s;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+
+
+    /* ── Header ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .logo {
+      font-family: var(--font-cond);
+      font-weight: 900;
+      font-size: 1.5rem;
+      letter-spacing: .12em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    .logo span { color: var(--text); }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+    }
+
+    /* ── Pages ── */
+    .page { display: none; padding: 20px; max-width: 520px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* ── Section label ── */
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-family: var(--font-cond);
+      font-weight: 700;
+      font-size: .75rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input[type="text"], select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input[type="text"]:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,212,255,.12);
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6a82' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    select option { background: var(--surface2); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: block; width: 100%;
+      padding: 15px;
+      border: none; border-radius: 8px;
+      font-family: var(--font-cond);
+      font-weight: 900;
+      font-size: 1.1rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform .1s, box-shadow .2s, opacity .2s;
+      outline: none;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #2f5bbf; }
+    .btn-danger {
+      background: var(--red);
+      color: #fff;
+    }
+    .btn-danger:hover { background: #a03636; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn + .btn { margin-top: 12px; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Session info card ── */
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .info-item { }
+    .info-item .key {
+      font-family: var(--font-mono);
+      font-size: .6rem;
+      letter-spacing: .15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .info-item .val {
+      font-family: var(--font-cond);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    /* ── Timer display ── */
+    .timer-wrap {
+      text-align: center;
+      padding: 32px 20px;
+      margin-bottom: 24px;
+    }
+    .timer-label {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .25em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .timer-display {
+      font-family: var(--font-mono);
+      font-size: 4.5rem;
+      color: var(--accent);
+      letter-spacing: .05em;
+      line-height: 1;
+      transition: color .3s;
+    }
+    .timer-display.running {
+      color: var(--green);
+    }
+
+    /* ── Run counter ── */
+    .run-counter {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+    }
+    .run-counter .lbl {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .2em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .run-counter .num {
+      font-family: var(--font-cond);
+      font-weight: 900;
+      font-size: 1.4rem;
+      color: var(--accent2);
+    }
+
+    /* ── Log list ── */
+    .log-list { margin-bottom: 20px; }
+    .log-entry {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      animation: slideIn .25s ease;
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .log-entry .entry-time {
+      font-family: var(--font-mono);
+      font-size: .75rem;
+      color: var(--muted);
+    }
+    .log-entry .entry-dur {
+      font-family: var(--font-cond);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--green);
+    }
+    .log-entry .entry-flags {
+      display: flex; gap: 6px;
+    }
+    .flag {
+      font-family: var(--font-mono);
+      font-size: .6rem;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+    .flag-incident { background: rgba(255,61,61,.2); color: var(--red); border: 1px solid rgba(255,61,61,.4); }
+    .flag-nearmiss { background: rgba(255,107,53,.2); color: var(--accent2); border: 1px solid rgba(255,107,53,.4); }
+    .flag-dist { background: rgba(0,212,255,.1); color: var(--accent); border: 1px solid rgba(0,212,255,.3); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      width: 100%; max-width: 400px;
+      animation: modalIn .2s ease;
+    }
+    @keyframes modalIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+    .modal-title {
+      font-family: var(--font-cond);
+      font-weight: 900;
+      font-size: 1.4rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .modal-subtitle {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--muted);
+      letter-spacing: .15em;
+      margin-bottom: 22px;
+    }
+
+    /* ── Checkboxes ── */
+    .check-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .check-label {
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      transition: border-color .2s;
+    }
+    .check-label:has(input:checked) { border-color: var(--accent2); }
+    .check-label input[type="checkbox"] { display: none; }
+    .check-box {
+      width: 22px; height: 22px; border-radius: 4px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: border-color .2s, background .2s;
+    }
+    .check-label:has(input:checked) .check-box {
+      background: var(--accent2); border-color: var(--accent2);
+    }
+    .check-box svg { display: none; }
+    .check-label:has(input:checked) .check-box svg { display: block; }
+    .check-text {
+      font-family: var(--font-cond);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: .05em;
+    }
+    .check-desc {
+      font-size: .8rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      letter-spacing: .1em;
+      color: var(--text);
+      z-index: 200;
+      transition: transform .3s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.error { border-color: var(--red); color: var(--red); }
+
+    /* ── Day/night badge ── */
+    .period-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .period-badge.day { background: rgba(255,235,59,.1); color: #ffe100; border: 1px solid rgba(255,225,0,.3); }
+    .period-badge.night { background: rgba(0,212,255,.1); color: var(--accent); border: 1px solid rgba(0,212,255,.3); }
+
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .mt-8 { margin-top: 8px; }
+    .text-center { text-align: center; }
+    .muted-text { font-family: var(--font-mono); font-size: .7rem; color: var(--muted); letter-spacing: .1em; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* Sending overlay on modal btn */
+    .sending-text { display: none; }
+    .normal-text { display: inline; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header>
+  <div class="logo">Flight<span>Log</span></div>
+  <div id="periodBadge" class="period-badge day">☀ Day Ops</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">☀️</button>
+    <div class="status-dot"></div>
+  </div>
+</header>
+
+<!-- ══════════ PAGE 1: SETUP ══════════ -->
+<div class="page active" id="pageSetup">
+  <br>
+  <div class="section-label">// Session Setup</div>
+
+  <div class="field">
+    <label>Operator Name</label>
+    <input type="text" id="operatorName" placeholder="Enter your name" autocomplete="off" autocorrect="off" spellcheck="false" />
+  </div>
+
+  <div class="field">
+    <label>Location</label>
+    <select id="location">
+      <option value="">— Select airport —</option>
+      <option value="Reynolds Jet (LUK)">Reynolds Jet (LUK)</option>
+      <option value="Pentastar (PTK)">Pentastar (PTK)</option>
+      <option value="Atlantic (PWA)">Atlantic (PWA)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Weather Conditions</label>
+    <select id="weather">
+      <option value="">— Select conditions —</option>
+      <option value="Clear">Clear</option>
+      <option value="Light">Light</option>
+      <option value="Medium">Medium</option>
+      <option value="Harsh">Harsh</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Tail Number</label>
+    <input type="text" id="tailNumber" placeholder="e.g. N12345" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+  </div>
+
+  <br>
+  <button class="btn btn-primary" onclick="startSession()">BEGIN SESSION</button>
+</div>
+
+<!-- ══════════ PAGE 2: LOGGING ══════════ -->
+<div class="page" id="pageLog">
+  <br>
+  <div class="info-card">
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="key">Operator</div>
+        <div class="val" id="displayOperator">—</div>
+      </div>
+      <div class="info-item">
+        <div class="key">Tail #</div>
+        <div class="val" id="displayTail">—</div>
+      </div>
+      <div class="info-item">
+        <div class="key">Location</div>
+        <div class="val" id="displayLocation">—</div>
+      </div>
+      <div class="info-item">
+        <div class="key">Weather</div>
+        <div class="val" id="displayWeather">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="run-counter">
+    <div class="lbl">Runs This Session</div>
+    <div class="num" id="runCount">0</div>
+  </div>
+
+  <div class="timer-wrap">
+    <div class="timer-label">// elapsed time</div>
+    <div class="timer-display" id="timerDisplay">00:00:00</div>
+  </div>
+
+  <button class="btn btn-primary" id="startBtn" onclick="startRun()">▶ START RUN</button>
+  <button class="btn btn-danger" id="stopBtn" onclick="stopRun()" style="display:none">■ STOP &amp; LOG</button>
+
+  <hr class="divider">
+
+  <div class="section-label">// Run History</div>
+  <div class="log-list" id="logList">
+    <div class="text-center muted-text" style="padding:20px 0;">No runs logged yet</div>
+  </div>
+
+  <hr class="divider">
+  <button class="btn btn-ghost" onclick="endSession()">END SESSION</button>
+  <br>
+</div>
+
+<!-- ══════════ STOP MODAL ══════════ -->
+<div class="modal-overlay" id="stopModal">
+  <div class="modal">
+    <div class="modal-title">Log Run</div>
+    <div class="modal-subtitle" id="modalDuration">// Duration: 00:00:00</div>
+
+    <div class="check-group">
+      <label class="check-label">
+        <input type="checkbox" id="chkIncident">
+        <div class="check-box">
+          <svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="check-text">Incident</div>
+          <div class="check-desc">A safety incident occurred</div>
+        </div>
+      </label>
+
+      <label class="check-label">
+        <input type="checkbox" id="chkNearMiss">
+        <div class="check-box">
+          <svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="check-text">Near-Miss</div>
+          <div class="check-desc">A near-miss event occurred</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="field">
+      <label>Distance (optional)</label>
+      <input type="text" id="inputDistance" placeholder="e.g. 1.2 nm" autocomplete="off" />
+    </div>
+
+    <button class="btn btn-primary" id="logBtn" onclick="logRun()">
+      <span class="normal-text">LOG RUN</span>
+      <span class="sending-text"><span class="spinner"></span>SAVING...</span>
+    </button>
+    <button class="btn btn-ghost mt-8" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════ TOAST ══════════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ═══════════════════════════════════════════
+  // THEME
+  // ═══════════════════════════════════════════
+  (function initTheme() {
+    const saved = localStorage.getItem("flightlog-theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme = saved || (prefersDark ? "dark" : "light");
+    applyTheme(theme);
+  })();
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.getElementById("themeToggle").textContent = theme === "dark" ? "🌙" : "☀️";
+    localStorage.setItem("flightlog-theme", theme);
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute("data-theme");
+    applyTheme(current === "dark" ? "light" : "dark");
+  }
+
+  // ═══════════════════════════════════════════
+  // CONFIGURATION — paste your Apps Script URL here
+  // ═══════════════════════════════════════════
+  const APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
+
+  // ═══════════════════════════════════════════
+  // STATE
+  // ═══════════════════════════════════════════
+  let session = {};
+  let timerInterval = null;
+  let startTime = null;
+  let elapsedSeconds = 0;
+  let runCount = 0;
+  let runLogs = [];
+
+  // ═══════════════════════════════════════════
+  // DAY / NIGHT
+  // ═══════════════════════════════════════════
+  function getPeriod() {
+    const h = new Date().getHours();
+    return (h >= 20 || h < 6) ? "Night" : "Day";
+  }
+
+  function updatePeriodBadge() {
+    const badge = document.getElementById("periodBadge");
+    const isNight = getPeriod() === "Night";
+    badge.textContent = isNight ? "☾ Night Ops" : "☀ Day Ops";
+    badge.className = "period-badge " + (isNight ? "night" : "day");
+  }
+  updatePeriodBadge();
+  setInterval(updatePeriodBadge, 60000);
+
+  // ═══════════════════════════════════════════
+  // SESSION SETUP
+  // ═══════════════════════════════════════════
+  function startSession() {
+    const name   = document.getElementById("operatorName").value.trim();
+    const loc    = document.getElementById("location").value;
+    const wx     = document.getElementById("weather").value;
+    const tail   = document.getElementById("tailNumber").value.trim();
+
+    if (!name || !loc || !wx || !tail) {
+      showToast("Please fill in all fields", "error");
+      return;
+    }
+
+    session = { name, loc, wx, tail };
+
+    document.getElementById("displayOperator").textContent = name;
+    document.getElementById("displayTail").textContent = tail.toUpperCase();
+    document.getElementById("displayLocation").textContent = loc.split("(")[0].trim();
+    document.getElementById("displayWeather").textContent = wx;
+
+    showPage("pageLog");
+  }
+
+  function endSession() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    resetTimer();
+    runCount = 0;
+    runLogs = [];
+    document.getElementById("runCount").textContent = "0";
+    document.getElementById("logList").innerHTML = '<div class="text-center muted-text" style="padding:20px 0;">No runs logged yet</div>';
+    document.getElementById("startBtn").style.display = "block";
+    document.getElementById("stopBtn").style.display = "none";
+    showPage("pageSetup");
+  }
+
+  // ═══════════════════════════════════════════
+  // TIMER
+  // ═══════════════════════════════════════════
+  function formatTime(s) {
+    const h = Math.floor(s / 3600).toString().padStart(2, "0");
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, "0");
+    const sec = (s % 60).toString().padStart(2, "0");
+    return `${h}:${m}:${sec}`;
+  }
+
+  function startRun() {
+    startTime = Date.now();
+    elapsedSeconds = 0;
+    timerInterval = setInterval(() => {
+      elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      document.getElementById("timerDisplay").textContent = formatTime(elapsedSeconds);
+    }, 200);
+    document.getElementById("timerDisplay").classList.add("running");
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("stopBtn").style.display = "block";
+  }
+
+  function stopRun() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    document.getElementById("timerDisplay").classList.remove("running");
+
+    // reset modal
+    document.getElementById("chkIncident").checked = false;
+    document.getElementById("chkNearMiss").checked = false;
+    document.getElementById("inputDistance").value = "";
+    document.getElementById("modalDuration").textContent = `// Duration: ${formatTime(elapsedSeconds)}`;
+
+    document.getElementById("stopModal").classList.add("open");
+  }
+
+  function resetTimer() {
+    elapsedSeconds = 0;
+    document.getElementById("timerDisplay").textContent = "00:00:00";
+    document.getElementById("timerDisplay").classList.remove("running");
+  }
+
+  // ═══════════════════════════════════════════
+  // LOG RUN — send to Google Sheets
+  // ═══════════════════════════════════════════
+  async function logRun() {
+    const incident  = document.getElementById("chkIncident").checked;
+    const nearMiss  = document.getElementById("chkNearMiss").checked;
+    const distance  = document.getElementById("inputDistance").value.trim();
+    const duration  = formatTime(elapsedSeconds);
+    const now       = new Date();
+    const period    = getPeriod();
+
+    const payload = {
+      datetime:   now.toLocaleString("en-US"),
+      operator:   session.name,
+      location:   session.loc,
+      weather:    session.wx,
+      tail:       session.tail.toUpperCase(),
+      duration:   duration,
+      period:     period,
+      incident:   incident ? "YES" : "NO",
+      nearMiss:   nearMiss ? "YES" : "NO",
+      distance:   distance || "—",
+    };
+
+    // UI: sending state
+    const logBtn = document.getElementById("logBtn");
+    logBtn.disabled = true;
+    logBtn.querySelector(".normal-text").style.display = "none";
+    logBtn.querySelector(".sending-text").style.display = "inline";
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // success — we can't read response with no-cors, assume OK
+      runCount++;
+      document.getElementById("runCount").textContent = runCount;
+
+      // add to local log list
+      addLocalLog(payload, incident, nearMiss, distance);
+
+      closeModal();
+      resetTimer();
+      document.getElementById("startBtn").style.display = "block";
+      document.getElementById("stopBtn").style.display = "none";
+      showToast("Run logged ✓", "success");
+
+    } catch (err) {
+      showToast("Save failed — check connection", "error");
+    } finally {
+      logBtn.disabled = false;
+      logBtn.querySelector(".normal-text").style.display = "inline";
+      logBtn.querySelector(".sending-text").style.display = "none";
+    }
+  }
+
+  function addLocalLog(p, incident, nearMiss, distance) {
+    const list = document.getElementById("logList");
+    if (runCount === 1) list.innerHTML = "";
+
+    const entry = document.createElement("div");
+    entry.className = "log-entry";
+
+    const flags = [];
+    if (incident) flags.push('<span class="flag flag-incident">INC</span>');
+    if (nearMiss) flags.push('<span class="flag flag-nearmiss">NM</span>');
+    if (distance) flags.push(`<span class="flag flag-dist">${distance}</span>`);
+
+    entry.innerHTML = `
+      <div>
+        <div class="entry-time">#${runCount} · ${p.period} · ${new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</div>
+        <div class="entry-flags mt-8">${flags.join("") || '<span class="muted-text" style="font-size:.6rem">No flags</span>'}</div>
+      </div>
+      <div class="entry-dur">${p.duration}</div>
+    `;
+    list.prepend(entry);
+  }
+
+  // ═══════════════════════════════════════════
+  // HELPERS
+  // ═══════════════════════════════════════════
+  function closeModal() {
+    document.getElementById("stopModal").classList.remove("open");
+  }
+
+  function showPage(id) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  function showToast(msg, type = "") {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast " + type;
+    setTimeout(() => t.classList.add("show"), 10);
+    setTimeout(() => t.classList.remove("show"), 3000);
+  }
+</script>
+</body>
+</html>
