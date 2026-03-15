@@ -425,7 +425,13 @@
 
   <div class="field">
     <label>Operator Name</label>
-    <input type="text" id="operatorName" placeholder="Enter your name" autocomplete="off" autocorrect="off" spellcheck="false" />
+    <select id="operatorName">
+      <option value="">— Select operator —</option>
+      <option value="Chris Lee">Chris Lee</option>
+      <option value="David Ladnier">David Ladnier</option>
+      <option value="Huzefa Dossaji">Huzefa Dossaji</option>
+      <option value="Jon Taylor">Jon Taylor</option>
+    </select>
   </div>
 
   <div class="field">
@@ -538,8 +544,17 @@
     </div>
 
     <div class="field">
-      <label>Distance (optional)</label>
-      <input type="text" id="inputDistance" placeholder="e.g. 1.2 nm" autocomplete="off" />
+      <label>Distance (ft)</label>
+      <select id="inputDistance">
+        <option value="">— Select distance —</option>
+        <option value="50 ft">50 ft</option>
+        <option value="100 ft">100 ft</option>
+        <option value="150 ft">150 ft</option>
+        <option value="200 ft">200 ft</option>
+        <option value="300 ft">300 ft</option>
+        <option value="500 ft">500 ft</option>
+        <option value="1000 ft">1000 ft</option>
+      </select>
     </div>
 
     <button class="btn btn-primary" id="logBtn" onclick="logRun()">
@@ -692,6 +707,10 @@
     const incident  = document.getElementById("chkIncident").checked;
     const nearMiss  = document.getElementById("chkNearMiss").checked;
     const distance  = document.getElementById("inputDistance").value.trim();
+    if (!distance) {
+      showToast("Please select a distance", "error");
+      return;
+    }
     const duration  = formatTime(elapsedSeconds);
     const now       = new Date();
 
