@@ -706,7 +706,7 @@
       location:   session.loc,
       weather:    session.wx,
       tail:       session.tail.toUpperCase(),
-      duration:   duration,
+      duration:  Math.ceil(elapsedSeconds / 60) || 1,
       incident:   incident ? "YES" : "NO",
       nearMiss:   nearMiss ? "YES" : "NO",
       distance:   distance || "—",
